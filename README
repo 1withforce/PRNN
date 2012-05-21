@@ -1,0 +1,1 @@
+Artificial neural network using ruby. Goal is to have a simple three-layered network that is at least capable of "learning" simple logic functions (XOR, NAND, NOR etc.) Currently, it can do forward propagation if it is provided with correct weights. Backpropagation algorithm is very nearly complete.
