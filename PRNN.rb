@@ -26,7 +26,7 @@ end
 
 def extract_row(matrix, row) #must be an array, not actual matrix
 	output = []
-	matrix.each do |collum|
+	matrix[0].each do |collum|
 		output << collum[row]
 	end
 	return output
@@ -60,6 +60,7 @@ def forward_prop(thetas, input)
 end
 
 def calc_error(expected, obtained) #calculates the error for each item in the matching lists and returns a list of the same length
+	#puts expected.inspect, obtained.inspect
 	if expected.length != obtained.length
 		raise "Error: item lengths are not equal"
 	end
@@ -68,30 +69,37 @@ def calc_error(expected, obtained) #calculates the error for each item in the ma
 	until i == expected.length do
 		errors << obtained[i] - expected[i]
 		i +=1
+	#puts errors.inspect
 	end
+	errors
 end
 		
 def back_prop(thetas, a, expected) #"a" is the matrix of outputs
 	delta3 = calc_error(expected, a[1])
 	dgz2 = []#g'(z) of layer 2
 #======Currently working on \/====================================================
-	a[3].each do |i|
-		dgz2 << i*(1-i)
+	a[0].each do |i|
+		dgz2 << [i*(1-i)]
+		
 	end
 	#lowercaseDelta2 = (theta2)transposed * lowercaseDelta3 .* g'(z2)
-	delta2 = ((Matrix.rows(extract_row(thetas, 1))).transpose * Matrix[delta3]).to_a[0].elem_mult(dgz2)
+	print delta3, dgz2
+	print ">>", Matrix[extract_row(thetas, 1)].transpose.to_a.inspect, "<<"
+	print dgz2.inspect
+	delta2 = elem_mult(Matrix[extract_row(thetas, 1)].transpose.to_a, dgz2)
 	deltas = [[delta2], [delta3]]
 end
 
 def update_w(thetas, deltas)
+	puts thetas.inspect, deltas.inspect
 	thetas = (Matrix.rows(thetas) + Matrix.rows(deltas)).to_a
 end
 
-def elem_mult(matching_array) #matching array must be of same length as self
+def elem_mult(an_array, matching_array) #matching array must be of same length as self
 	output = []
 	c = 0	
-	self.each do |item|
-		output << item*matching_array[c]
+	an_array.each do |item|
+		output << item[0]*matching_array[c][0]
 		c+=1
 	end
 	return output
@@ -104,28 +112,29 @@ def trained?(c_iter,max_iter) #temporary solution of running x iterations just t
 end
 
 
-#this function is behaving very oddly..
+
 def init_weights(dimensions)
 	inputL = dimensions[0]#not counting bias
 	hiddenL = dimensions[1]
 	outL = dimensions[2]
 	theta2 = [[0.0]*hiddenL]*(inputL+1) # +1 for bias
-	theta3 = [[1.0]*outL]*(hiddenL+1)
-	#weights = [theta2, theta3]
-	#puts weights.inspect
-	#xI = iI = jI = 0
-	for i in (0..(hiddenL-1))
-		for j in (0..(inputL-1))
-			theta2[i][j]=Float(rand(30+30)-30) #random int between -30 and 30
-		
-		end
-	end
-	for i in (0..(outL-2))
-		for j in (0..(hiddenL-1))
-			theta3[i][j]=Float(rand(30+30)-30) #random int between -30 and 30
-		end
-	end
+	theta3 = [[0.0]*outL]*(hiddenL+1)
 	weights = [theta2, theta3]
+	lI = 0
+	weights.each do |layer|
+		iI = 0 #forgot to reset these, was very frustrating		
+		layer.each do |i|
+			jI = 0
+			i.each do |j|
+				weights[lI][iI][jI] = Float(rand(60)-30) #why is this giving the same random numbers for each layer?
+				jI+=1
+			end
+			iI += 1
+		end
+		lI +=1
+	end
+	puts weights.inspect
+	return weights
 end
 
 def train(training_set, dimensions, verbose = false)# training set must be in format: [[[input, input...],[output, output...]],[[input, input...],[output, output...]]...]
@@ -134,6 +143,7 @@ def train(training_set, dimensions, verbose = false)# training set must be in fo
 	iteration = 1
 	until trained == true do
 		exampleN = 1
+		puts training_set
 		training_set.each do |data|
 			if verbose:
 				puts "Iteration: ", iteration, "\texample number: ", exampleN, "\tCurrent weights:\n", thetas.inspect
@@ -141,7 +151,7 @@ def train(training_set, dimensions, verbose = false)# training set must be in fo
 			inputs = data[0]
 			expected = data[1]
 			a = forward_prop(thetas, inputs)
-			deltas = back_prop(thetas, a)
+			deltas = back_prop(thetas, a, expected)
 			thetas = update_w(thetas, deltas)
 			iteration +=1
 			exampleN +=1
