@@ -103,8 +103,6 @@ def trained?(c_iter,max_iter) #temporary solution of running x iterations just t
 	end
 end
 
-
-#this function is behaving very oddly..
 def init_weights(dimensions)
 	inputL = dimensions[0]#not counting bias
 	hiddenL = dimensions[1]
